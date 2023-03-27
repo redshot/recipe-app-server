@@ -1,11 +1,10 @@
 const express = require('express')
 const router = express.Router()
 
-router.get('/signup', (req, res) => {
-  res.json({
-    data: 'you hit signup endpoint'
-  });
-});
+// import controller
+const {signup} = require('../controllers/auth')
+
+router.get('/signup', signup);
 
 module.exports = router; // {}
 
@@ -14,8 +13,8 @@ module.exports = router; // {}
  *  - The client side app can send request containing user data to /api/signup endpoint then do an action with the data
  *  - res.json is one of the many properties the res object have.
  * express.Router() will handle the routes
- * module.exports is an empty object by default. This object is always available for us whenever we create a file inside node app.
- *  - anything that we want to export, just add it to the empty object and import it anywhere in the app
+ * module.exports is an empty object by default. Each file in a Node.js project is treated as a module that can export values 
+ *  - and functions to be used by other modules
  * Before the request hits the controller, middlewares are applied
  * Middlewares(express-validator) are applied before the requests hits the controller. If it passes,the signup controller is executed
  *  - userSignupValidator and runValidation are applied to /signup. The error/s will be handled by the runValidation middleware
