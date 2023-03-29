@@ -1,4 +1,9 @@
 const express = require('express')
+const morgan = require('morgan')
+const cors = require('cors')
+const bodyParser = require('body-parser')
+const mongoose = require('mongoose')
+require('dotenv').config()
 
 const app = express()
 
@@ -8,9 +13,17 @@ const authRoutes = require('./routes/auth')
 // middleware
 app.use('/api', authRoutes)
 
-const port = process.env.port || 8000
+// app midllewares
+app.use(morgan('dev'))
+app.use(bodyParser.json())
+// app.use(cors()) // allows all origins
+if (process.env.NODE_ENV = 'development') {
+  app.use(cors({origin: `http://localhost:3000`}))
+}
+
+const port = process.env.PORT || 8000
 app.listen(port, () => {
-  console.log(`API is running on port ${port}`)
+  console.log(`API is running on port ${port} - ${process.env.NODE_ENV}`)
 })
 
 /**
@@ -40,8 +53,9 @@ app.listen(port, () => {
  * We need cors(middleware) to avoid cors error since react runs on port 3000 while the api server runs on port 8000
  *  - Cors will allow origin request to our server
  *  - We can also restrict the access to our api only from a certain domain by configuring it more.
- * Body-parser looks at the body of the request when the request comes in - take it - parse it and attach it to the request object.
+ * bodyParser looks at the body of the request when the request comes in - take it - parse it and attach it to the request object.
  *  - Also, it is responsible for parsing the incoming request bodies in a middleware before you handle it
+ * The environment variables like PORT are usually written in capital case to make them identical. For example: const port = process.env.PORT || 8000
  * Prettier and pretty-quick packages are installed to automate the formatting.
  *  - "npm run format" can be executed in the terminal to run the formatting package.
  *  - format on save is enabled via vs code
