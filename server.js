@@ -46,6 +46,8 @@ app.listen(port, () => {
  *  - "npm run format" can be executed in the terminal to run the formatting package.
  *  - format on save is enabled via vs code
  *
+ * Arrow functions work differently with the this keyword
+ * 
  * 12345678
  * ch1llF0rce49
  *
