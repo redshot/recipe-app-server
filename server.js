@@ -7,6 +7,17 @@ require('dotenv').config()
 
 const app = express()
 
+// connect to db
+mongoose
+  .connect(process.env.MONGO_URI, {
+    useNewUrlParser: true,
+    // useFindAndModify: false, // no longer supported as of mongoose 6.0
+    useUnifiedTopology: true
+    //useCreateIndex: true // no longer supported as of mongoose 6.0
+  })
+  .then(() => console.log('DB connected'))
+  .catch(err => console.log('DB CONNECTION ERROR: ', err))
+
 // import routes
 const authRoutes = require('./routes/auth')
 
