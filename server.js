@@ -21,16 +21,17 @@ mongoose
 // import routes
 const authRoutes = require('./routes/auth')
 
-// middleware
-app.use('/api', authRoutes)
-
 // app midllewares
 app.use(morgan('dev'))
-app.use(bodyParser.json())
+app.use(express.json()) // body-parser package is now deprecated and it is now built-in to express version 4.16+
+app.use(express.urlencoded({ extended: true }))
 // app.use(cors()) // allows all origins
 if (process.env.NODE_ENV = 'development') {
   app.use(cors({origin: `http://localhost:3000`}))
 }
+
+// middleware
+app.use('/api', authRoutes)
 
 const port = process.env.PORT || 8000
 app.listen(port, () => {
@@ -66,6 +67,8 @@ app.listen(port, () => {
  *  - We can also restrict the access to our api only from a certain domain by configuring it more.
  * bodyParser looks at the body of the request when the request comes in - take it - parse it and attach it to the request object.
  *  - Also, it is responsible for parsing the incoming request bodies in a middleware before you handle it
+ *  - body-parser has became builtin since Express 4.16+
+ *    - We are converting these codes: app.use(bodyParser.json()), app.use(bodyParser.urlencoded({ extended: true })) into Express way of coding it
  * The environment variables like PORT are usually written in capital case to make them identical. For example: const port = process.env.PORT || 8000
  * Prettier and pretty-quick packages are installed to automate the formatting.
  *  - "npm run format" can be executed in the terminal to run the formatting package.
