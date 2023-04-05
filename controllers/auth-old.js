@@ -1,7 +1,60 @@
 const User = require('../models/user') // import the user model
 
 exports.signup = (req, res) => {
+  const{name, email, password} = req.body // data is available from the req.body. We can destructure the data {name, email, password} from req.body
+  const saveNewUser = async () => {
+    try {
+      let findUser = await User.findOne({ email }); // promise is the new way of doing this instead of callback as of express 4.18
+      let newUser = new User({name, email, password}) // instantiate the user model imported above.
+  
+      if (findUser) {
+        return res.status(400).json({
+          error: 'Email is taken'
+        })
+      }
+    
+      await newUser.save(); // promise is the new way of doing this instead of callback as of express 4.18
+  
+      return res.json({ message: 'Signup sucess! Please signin'})
+    } catch(error) {
+      console.log('SIGNUP ERROR', error)
 
+      return res.status(400).json({
+        error: error
+      })  
+    }
+  }
+
+  /*
+  // this is the original way of doing it but this shows a deprecated error
+  User.findOne({email}).exec((err, user) => {
+    if (user) {
+      return res.status(400).json({
+        error: 'Email is taken'
+      })
+    }
+  })
+  */
+
+  /*
+  // this is the original way of doing it but this shows a deprecated error
+  newUser.save((err, success) => {
+    if (err) {
+      console.log('SIGNUP ERROR', err)
+
+      return res.status(400).json({
+        error: err
+      })
+    }
+
+    res.json({
+      message: 'Signup sucess! Please signin'
+    })
+  })
+  */
+
+  console.log('REQ BODY ON SIGNUP', req.body) // shows the data send on terminal
+  saveNewUser();
 }
 
 /**
