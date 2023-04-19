@@ -2,14 +2,15 @@ const express = require('express')
 const router = express.Router()
 
 // import controller
-const { signup, accountActivation } = require('../controllers/auth')
+const { signup, accountActivation, signin } = require('../controllers/auth')
 
 // import validators
-const { userSignupValidator } = require('../validators/auth')
+const { userSignupValidator, userSigninValidator } = require('../validators/auth')
 const { runValidation } = require('../validators/') // no need to write index
 
 router.post('/signup', userSignupValidator, runValidation, signup);
 router.post('/account-activation', accountActivation);
+router.post('/signin', userSigninValidator, runValidation, signin);
 module.exports = router; // {}
 
 /**
@@ -27,5 +28,5 @@ module.exports = router; // {}
  *  - userSignupValidator and runValidation are applied to /signup. The error/s will be handled by the runValidation middleware
  *  - The last parameter of "router.post('/signup', userSignupValidator, runValidation, signup)" is the controller
  * We will use .post if we want to post something back to the server. We will use .get if we want to get something from the server
- * 
+ * signup, accountActivation and signin are methods in the controller
  */
