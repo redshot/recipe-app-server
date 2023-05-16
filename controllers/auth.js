@@ -1,6 +1,7 @@
 const User = require('../models/user') // import the user model
 const jwt = require('jsonwebtoken')
 const sgMail = require('@sendgrid/mail') // sendgrid
+const { expressjwt: expressjwt } = require('express-jwt');
 
 sgMail.setApiKey(process.env.SENDGRID_API_KEY)
 
@@ -188,6 +189,11 @@ exports.signin = (req, res) => {
 
   signInUser();
 };
+
+exports.requireSignin = expressjwt({ // adds a req.user property to the request object
+  secret: process.env.JWT_SECRET, 
+  algorithms: ['HS256']
+});
 
 /**
  * We are going to take all the user information then send them an email and only when they click the email the account is created for them.
