@@ -190,7 +190,7 @@ exports.signin = (req, res) => {
   signInUser();
 };
 
-exports.requireSignin = expressjwt({ // adds a req.user property to the request object
+exports.requireSignin = expressjwt({ // adds a req.user/req.auth property to the request object
   secret: process.env.JWT_SECRET, 
   algorithms: ['HS256']
 });

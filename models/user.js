@@ -76,4 +76,5 @@ module.exports = mongoose.model('User', userSchema)
  *  hashed password saved in the database is this.hashed_password
  *  - If the plain password hashed by encryptPassword(plainText) matches with the one saved in the database, then we authenticate user
  * We need to export the user model to create a new user
+ * 
  */
