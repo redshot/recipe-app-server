@@ -195,6 +195,38 @@ exports.requireSignin = expressjwt({ // adds a req.user/req.auth property to the
   algorithms: ['HS256']
 });
 
+exports.adminMiddleware = (req, res, next) => {
+  // console.log('req.auth: ', req.auth);
+  const restrictUser = async () => {
+    try {
+      let findUser = await User.findById({ _id: req.auth._id }); // promise is the new way of doing this instead of callback as of express 4.18 and mongoose 7.0.3
+      // console.log('findUser: ', findUser);
+
+      if (!findUser) {
+        return res.status(400).json({
+          error: 'User not found'
+        });
+      }
+
+      if (findUser.role !== 'admin') {
+        return res.status(400).json({
+          error: 'Admin resource. Access denied.'
+        });
+      }
+      req.profile = findUser; // req.profile contains the user record that was not yet updated
+      next();
+    } catch(error) {
+      console.log('Admin Middleware Error', error);
+  
+      return res.status(400).json({
+        error: 'Admin Middleware Error'
+      })  
+    }
+  };
+
+  restrictUser();
+};
+
 /**
  * We are going to take all the user information then send them an email and only when they click the email the account is created for them.
  *  - We are doing this to avoid spam users
@@ -229,4 +261,13 @@ exports.requireSignin = expressjwt({ // adds a req.user/req.auth property to the
  *  - in success signin we will send user info and valid token
  *  - this token will be sent back to server from client/react to access protected routes
  * 
+ * - Code flow for exports.adminMiddleware = (req, res, next) {}:
+ *  - Apply the requireSignin is applied in the user route. For example: router.put('/admin/update', requireSignin, update);
+ *    - The requireSignin middleware will give us the req.user/req.auth id property
+ *  - The id property will be used to query in the database
+ *  - Check if the role is admin. The API/Update request will be denied if the role is not admin
+ *  - Update the user in the db. The update method in routes/user.js will be invoked by the next() function of adminMiddleware
+ * 
+ * - The next() function is not a part of the Node.js or Express API, but is the third argument that is passed to the 
+ *   middleware function. Source: https://expressjs.com/en/guide/writing-middleware.html
  */

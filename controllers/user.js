@@ -90,7 +90,7 @@ exports.update = (req, res) => {
   const updateUser = async () => {
     try {
       let findUser = await User.findOne({_id: req.auth._id}); // promise is the new way of doing this instead of callback as of express 4.18
-      console.log('findUser', findUser);
+      // console.log('updateUser findUser', findUser);
 
       if (!findUser) {
         return res.status(400).json({
