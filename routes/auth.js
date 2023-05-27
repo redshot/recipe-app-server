@@ -2,15 +2,25 @@ const express = require('express')
 const router = express.Router()
 
 // import controller
-const { signup, accountActivation, signin } = require('../controllers/auth')
+const { signup, accountActivation, signin, forgotPassword, resetPassword } = require('../controllers/auth')
 
 // import validators
-const { userSignupValidator, userSigninValidator } = require('../validators/auth')
+const {
+  userSignupValidator,
+  userSigninValidator,
+  forgotPasswordValidator,
+  resetPasswordValidator 
+} = require('../validators/auth')
 const { runValidation } = require('../validators/') // no need to write index
 
 router.post('/signup', userSignupValidator, runValidation, signup);
 router.post('/account-activation', accountActivation);
 router.post('/signin', userSigninValidator, runValidation, signin);
+
+// forgot reset password
+router.put('/forgot-password', forgotPasswordValidator, runValidation, forgotPassword);
+router.put('/reset-password', resetPasswordValidator, runValidation, resetPassword);
+
 module.exports = router; // {}
 
 /**
@@ -29,4 +39,10 @@ module.exports = router; // {}
  *  - The last parameter of "router.post('/signup', userSignupValidator, runValidation, signup)" is the controller
  * We will use .post if we want to post something back to the server. We will use .get if we want to get something from the server
  * signup, accountActivation and signin are methods in the controller
+ * 
+ * - Code flow for /forgot-password route:
+ *  - Validators are applied when the user visits the /forgot-password route.
+ *  - The request will not hit the controller if it did not pass the validation
+ *  - The forgotPassword methood will be executed in the ../controllers/auth if validation passes
+ * 
  */

@@ -144,7 +144,7 @@ exports.signin = (req, res) => {
       }
 
        // generate a token and send to client
-      const token = jwt.sign({_id: findUser._id}, process.env.JWT_SECRET, { expiresIn: '7d' });
+      const token = jwt.sign({_id: findUser._id}, process.env.JWT_SECRET, { expiresIn: '7d' }); // we can set this 1m(1 minute) to test expiry
       const {_id, name, role} = findUser; // email is remove in this line because of cannot access 'email' before initialization? error
 
       return res.json({
@@ -227,6 +227,53 @@ exports.adminMiddleware = (req, res, next) => {
   restrictUser();
 };
 
+exports.forgotPassword = (req, res) => {
+  const {email} = req.body;
+  const sendEmailForgotPassword = async () => {
+    try {
+      let findUser = await User.findOne({ email }); // promise is the new way of doing this instead of callback as of express 4.18 and mongoose 7.0.3
+  
+      if (!findUser) {
+        return res.status(400).json({
+          error: 'User with that email does not exist'
+        });
+      }
+
+      const token = jwt.sign({_id: findUser._id}, process.env.JWT_RESET_PASSWORD, {expiresIn: '10m'})
+      const emailData = {
+        from: process.env.EMAIL_FROM,
+        to: email,
+        subject: `Password Reset link`,
+        html: `
+          <h1>Please use the following link to reset your password</h1>
+          <p>${process.env.CLIENT_URL}/auth/password/reset/${token}</p>
+          <hr />
+          <p>This email may contain sensitive information</p>
+          <p>${process.env.CLIENT_URL}</p>
+        `
+      }
+
+      await sgMail.send(emailData);
+
+      return res.json({
+        message: `Email has been sent to ${email}. Follow the instruction to activate your account`
+      })      
+    } catch(error) {
+      console.log('FORGOT PASSWORD ERROR', error)
+
+      return res.status(400).json({
+        error: error
+      })  
+    }
+  };
+
+  sendEmailForgotPassword();
+};
+
+exports.resetPassword = (req, res) => {
+  //
+};
+
 /**
  * We are going to take all the user information then send them an email and only when they click the email the account is created for them.
  *  - We are doing this to avoid spam users
@@ -270,4 +317,9 @@ exports.adminMiddleware = (req, res, next) => {
  * 
  * - The next() function is not a part of the Node.js or Express API, but is the third argument that is passed to the 
  *   middleware function. Source: https://expressjs.com/en/guide/writing-middleware.html
+ * 
+ * - Code flow for exports.forgotPassword = (req, res) {}:
+ *  - Find user in the db if user is existing
+ *  - If user is existing, generate a token and send an email to the user we just searched
+ * 
  */

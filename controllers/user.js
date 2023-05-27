@@ -118,6 +118,7 @@ exports.update = (req, res) => {
         }
       }
   
+      // the code below needs to be updated so password update will work as well
       let updatedUser =  await User.findByIdAndUpdate(req.auth._id, {
           name: findUser.name
         },
