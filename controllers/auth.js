@@ -2,6 +2,7 @@ const User = require('../models/user') // import the user model
 const jwt = require('jsonwebtoken')
 const sgMail = require('@sendgrid/mail') // sendgrid
 const { expressjwt: expressjwt } = require('express-jwt');
+const _ = require('lodash');
 
 sgMail.setApiKey(process.env.SENDGRID_API_KEY)
 
@@ -253,17 +254,24 @@ exports.forgotPassword = (req, res) => {
         `
       }
 
-      await sgMail.send(emailData);
+      const updateResetPasswordLink = await findUser.updateOne({ resetPasswordLink: token });
 
-      return res.json({
-        message: `Email has been sent to ${email}. Follow the instruction to activate your account`
-      })      
+      if (!updateResetPasswordLink || updateResetPasswordLink === 'undefined' || updateResetPasswordLink === null) {
+        console.log('RESET PASSWORD LINK ERROR', updateResetPasswordLink);
+        return res.status(400).json({
+          error: 'Database connection error on user password forgot request'
+        });
+      } else {
+        await sgMail.send(emailData);
+        return res.json({
+          message: `Email has been sent to ${email}. Follow the instruction to activate your account`
+        })  
+      }
     } catch(error) {
       console.log('FORGOT PASSWORD ERROR', error)
-
       return res.status(400).json({
         error: error
-      })  
+      });
     }
   };
 
@@ -271,7 +279,62 @@ exports.forgotPassword = (req, res) => {
 };
 
 exports.resetPassword = (req, res) => {
-  //
+  const {resetPasswordLink, newPassword} = req.body;
+
+  if (resetPasswordLink) {
+    jwt.verify(resetPasswordLink, process.env.JWT_RESET_PASSWORD, function(err, decoded) {
+      if (err) {
+        return res.status(400).json({
+          error: 'Expired link. Try again'
+        });
+      }
+
+      const resetUserPassword = async () => {
+        try {
+          let findUser = await User.findOne({resetPasswordLink});
+
+          if (!findUser || findUser === 'undefined' || findUser === null) {
+            return res.status(400).json({
+              error: 'Something went wrong. Try later'
+            });
+          }
+
+          const updateFields = {
+            password: newPassword,
+            resetPasswordLink: '' // set back to empty string
+          }
+
+          findUser = _.extend(findUser, updateFields);
+          await findUser.save(); // user.save is converted into await instead of the callback way
+          /*
+          user.save((err, result) => {
+            if (err) {
+              return res.status(400).json({
+                error: 'Error updating user password'
+              });
+            }
+  
+            res.json({
+              message: `Great! Now you can login with your new password`
+            });
+          });
+          */
+
+          res.json({
+            message: `Great! Now you can login with your new password`
+          });
+        } catch(error) {
+          console.log('Error updating user password', error);
+  
+          return res.status(400).json({
+            error: 'Error updating user password'
+          })
+        }
+      };
+
+      resetUserPassword ();
+    });
+  }
 };
 
 /**
@@ -321,5 +384,25 @@ exports.resetPassword = (req, res) => {
  * - Code flow for exports.forgotPassword = (req, res) {}:
  *  - Find user in the db if user is existing
  *  - If user is existing, generate a token and send an email to the user we just searched
+ * 
+ * - Code flow for exports.resetPassword = (req, res) {}:
+ *  - Introduction: 
+ *    - The user must send an email first via http://localhost:8000/api/forgot-password to reset their password
+ *    - The user will then input his/her new password here http://localhost:8000/api/reset-password
+ *      - This request will include the token. The token contains user info.
+ *    - The resetPasswordLink(token/user info) will be populated with a token by http://localhost:8000/api/forgot-password
+ *      - resetPasswordLink is a property in the user model
+ *  - When the user sends a request on http://localhost:8000/api/reset-password, we check if resetPasswordLink is true
+ *  - We then verify if resetPasswordLink is expired.
+ *    - If resetPasswordLink is not expired, we will find the user in the db using resetPasswordLink(token/user info)
+ *  - Update the existing password with the NEW pasword via updateFields
+ *  - Use the extend() method of lodash library(need to update the explanation for this later)
+ *    - The extend() method works by assigning the own properties, and prototype properties of one or more objects to an object. 
+ *      Assigning is another term for referencing, rather than copying, or cloning
+ *      - Source: https://dustinpfister.github.io/2018/10/01/lodash_extend/
+ *    - The extend() method will take two parameters. The first parameter will have the destination object 
+ *      and the second parameter will have the source object.
+ *      - Source: https://www.tutorialspoint.com/difference-between-extend-assign-and-merge-in-lodash-library
+ *  - Save user/password in the db
  * 
  */
