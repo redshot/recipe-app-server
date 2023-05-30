@@ -240,7 +240,7 @@ exports.forgotPassword = (req, res) => {
         });
       }
 
-      const token = jwt.sign({_id: findUser._id}, process.env.JWT_RESET_PASSWORD, {expiresIn: '10m'})
+      const token = jwt.sign({_id: findUser._id, name: findUser.name}, process.env.JWT_RESET_PASSWORD, {expiresIn: '10m'})
       const emailData = {
         from: process.env.EMAIL_FROM,
         to: email,
@@ -285,7 +285,7 @@ exports.resetPassword = (req, res) => {
     jwt.verify(resetPasswordLink, process.env.JWT_RESET_PASSWORD, function(err, decoded) {
       if (err) {
         return res.status(400).json({
-          error: 'Expired link. Try again'
+          error: `Expired link. Try again. or  ${err}`
         });
       }
 
