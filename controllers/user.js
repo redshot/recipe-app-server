@@ -118,17 +118,12 @@ exports.update = (req, res) => {
         }
       }
   
-      // the code below needs to be updated so password update will work as well
-      let updatedUser =  await User.findByIdAndUpdate(req.auth._id, {
-          name: findUser.name
-        },
-        {new: true}
-      );
+      await findUser.save(); // This will essentially invoke userSchema.virtual('password') in /models/user.js
 
-      updatedUser.hashed_password = undefined;
-      updatedUser.salt = undefined;
+      findUser.hashed_password = undefined;
+      findUser.salt = undefined;
 
-      return res.json(updatedUser);
+      return res.json(findUser);
     } catch(error) {
       console.log('USER UPDATE ERROR', error)
 
